@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.24 as builder
+FROM golang:1.24 AS builder
 
 WORKDIR /app
 
@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/
 
 WORKDIR /
 COPY --from=builder /manager /manager
+RUN chmod +x /manager
 
 ENV PORT=8080
 EXPOSE 8080
