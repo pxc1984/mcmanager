@@ -19,7 +19,8 @@ Create a `.env` file (see `.env.example`) with:
 - `PORT` (default `8080`): HTTP listen port.
 - `RCON_HOST`, `RCON_PORT`, `RCON_PASSWORD` (all required): RCON connection to the running server.
 - `RCON_RESTART_COMMAND` (default `restart`): Command sent after countdown.
-- `PLUGINS_UID` (optional): Numeric group ID to apply (recursive chown) to synced `plugins/` and `bedwars_worlds/` on Linux.
+- `PLUGINS_UID` (optional): Numeric user/group ID to apply (recursive chown) to synced `plugins/` and `bedwars_worlds/` on Linux.
+- `LOCALE` (optional, default `en`): Announcement language (`en`, `ru` supported).
 
 ## Running with docker-compose
 

@@ -21,6 +21,7 @@ type Config struct {
 	CountdownWait time.Duration
 	PluginsUID    int
 	HasPluginsUID bool
+	Locale        string
 }
 
 func Load() (Config, error) {
@@ -73,6 +74,11 @@ func Load() (Config, error) {
 		restartCmd = "restart"
 	}
 
+	locale := os.Getenv("LOCALE")
+	if locale == "" {
+		locale = "en"
+	}
+
 	pluginsUIDStr := os.Getenv("PLUGINS_UID")
 	var pluginsUID int
 	hasPluginsUID := false
@@ -98,5 +104,6 @@ func Load() (Config, error) {
 		CountdownWait: 50 * time.Second,
 		PluginsUID:    pluginsUID,
 		HasPluginsUID: hasPluginsUID,
+		Locale:        locale,
 	}, nil
 }

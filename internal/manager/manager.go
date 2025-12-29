@@ -23,10 +23,34 @@ import (
 type Manager struct {
 	cfg config.Config
 	mu  sync.Mutex
+	msg Messages
+}
+
+type Messages struct {
+	RestartSoon string
+	Countdown   string
+}
+
+func selectMessages(locale string) Messages {
+	switch locale {
+	case "ru":
+		return Messages{
+			RestartSoon: "Обновление получено, перезапуск через 60 секунд",
+			Countdown:   "Перезапуск через %d",
+		}
+	default:
+		return Messages{
+			RestartSoon: "Update received, restarting in 60 seconds",
+			Countdown:   "Restarting in %d",
+		}
+	}
 }
 
 func New(cfg config.Config) *Manager {
-	return &Manager{cfg: cfg}
+	return &Manager{
+		cfg: cfg,
+		msg: selectMessages(cfg.Locale),
+	}
 }
 
 func (m *Manager) UpdateHandler(w http.ResponseWriter, r *http.Request) {
@@ -224,14 +248,14 @@ func (m *Manager) restartWithCountdown() error {
 		return err
 	}
 
-	if err := announce("Restarting in 60 seconds"); err != nil {
+	if err := announce(m.msg.RestartSoon); err != nil {
 		return fmt.Errorf("announce restart: %w", err)
 	}
 
 	time.Sleep(m.cfg.CountdownWait)
 
 	for i := 10; i >= 1; i-- {
-		if err := announce(fmt.Sprintf("Restarting in %d", i)); err != nil {
+		if err := announce(fmt.Sprintf(m.msg.Countdown, i)); err != nil {
 			return fmt.Errorf("countdown announce: %w", err)
 		}
 		time.Sleep(1 * time.Second)
