@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"sync"
@@ -137,6 +138,12 @@ func (m *manager) updateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := m.runPluginDownload(); err != nil {
+		log.Printf("plugin download failed: %v", err)
+		http.Error(w, fmt.Sprintf("plugin download failed: %v", err), http.StatusInternalServerError)
+		return
+	}
+
 	if err := m.syncData(); err != nil {
 		log.Printf("data sync failed: %v", err)
 		http.Error(w, fmt.Sprintf("data sync failed: %v", err), http.StatusInternalServerError)
@@ -162,6 +169,9 @@ func (m *manager) syncRepo() error {
 			SingleBranch:  true,
 			Depth:         1,
 		})
+		if err == nil {
+			log.Printf("cloning repot %s is successful", m.cfg.repoURL)
+		}
 		return err
 	}
 
@@ -187,6 +197,25 @@ func (m *manager) syncRepo() error {
 	}
 
 	return err
+}
+
+func (m *manager) runPluginDownload() error {
+	scriptPath := filepath.Join(m.cfg.repoPath, "plugins", "download.sh")
+	if _, err := os.Stat(scriptPath); err != nil {
+		return fmt.Errorf("plugins/download.sh missing: %w", err)
+	}
+
+	cmd := exec.Command("bash", scriptPath)
+	cmd.Dir = filepath.Dir(scriptPath)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	log.Printf("running %s", scriptPath)
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("run plugins/download.sh: %w", err)
+	}
+
+	return nil
 }
 
 func (m *manager) syncData() error {
