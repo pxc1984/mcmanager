@@ -1,0 +1,21 @@
+name: Trigger Plugins Update
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  notify-manager:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send update webhook
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+        run: |
+          if [ -z "$SERVER_HOST" ] || [ -z "$SERVER_PORT" ]; then
+            echo "SERVER_HOST and SERVER_PORT secrets must be set" >&2
+            exit 1
+          fi
+          curl -sSf -X POST "http://${SERVER_HOST}:${SERVER_PORT}/update"
