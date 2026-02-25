@@ -1,0 +1,29 @@
+services:
+  mcmanager:
+    image: ghcr.io/pxc1984/mcmanager:latest
+    container_name: mcmanager
+    env_file: .env
+    volumes:
+      - minecraft-data:/data
+    ports:
+      - "${PORT:-8080}:8080"
+    depends_on:
+      - minecraft
+
+  # Example Minecraft server service. Replace with your actual image/config.
+  minecraft:
+    image: itzg/minecraft-server:latest
+    container_name: minecraft
+    environment:
+      EULA: "TRUE"
+      RCON_PASSWORD: ${RCON_PASSWORD}
+      RCON_PORT: ${RCON_PORT:-25575}
+      ENABLE_RCON: "true"
+    ports:
+      - "25565:25565"
+      - "${RCON_PORT:-25575}:${RCON_PORT:-25575}"
+    volumes:
+      - minecraft-data:/data
+
+volumes:
+  minecraft-data:
