@@ -1,109 +1,29 @@
 package config
 
 import (
-	"errors"
-	"fmt"
-	"os"
-	"strconv"
-	"time"
+	"github.com/caarlos0/env/v11"
 )
 
 type Config struct {
-	RepoURL       string
-	RepoBranch    string
-	RepoPath      string
-	DataDir       string
-	HTTPAddr      string
-	RconHost      string
-	RconPort      int
-	RconPassword  string
-	RestartCmd    string
-	CountdownWait time.Duration
-	PluginsUID    int
-	HasPluginsUID bool
-	Locale        string
+	RepoURL       string `env:"REPO_URL"`
+	RepoBranch    string `env:"REPO_BRANCH" envDefault:"main"`
+	RepoPath      string `env:"REPO_PATH" envDefault:"/tmp/plugin-repo"`
+	DataDir       string `env:"DATA_DIR" envDefault:"./data"`
+	Port          string `env:"PORT" envDefault:"8080"`
+	RconHost      string `env:"RCON_HOST"`
+	RconPort      int    `env:"RCON_PORT"`
+	RconPassword  string `env:"RCON_PASSWORD"`
+	RestartCmd    string `env:"RCON_RESTART_COMMAND" envDefault:"restart"`
+	CountdownWait int    `env:"CountdownWait" envDefault:"50"`
+	PluginsUID    int    `env:"PLUGINS_UID" envDefault:"0"`
+	Locale        string `env:"LOCALE" envDefault:"en"`
 }
 
 func Load() (Config, error) {
-	repoURL := os.Getenv("REPO_URL")
-	if repoURL == "" {
-		return Config{}, errors.New("REPO_URL is required")
+	var cfg Config
+	if err := env.Parse(&cfg); err != nil {
+		return Config{}, err
 	}
 
-	repoBranch := os.Getenv("REPO_BRANCH")
-	if repoBranch == "" {
-		repoBranch = "main"
-	}
-
-	repoPath := os.Getenv("REPO_PATH")
-	if repoPath == "" {
-		repoPath = "/tmp/plugin-repo"
-	}
-
-	dataDir := os.Getenv("DATA_DIR")
-	if dataDir == "" {
-		dataDir = "./data"
-	}
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	rconHost := os.Getenv("RCON_HOST")
-	if rconHost == "" {
-		return Config{}, errors.New("RCON_HOST is required")
-	}
-
-	rconPortStr := os.Getenv("RCON_PORT")
-	if rconPortStr == "" {
-		return Config{}, errors.New("RCON_PORT is required")
-	}
-	rconPort, err := strconv.Atoi(rconPortStr)
-	if err != nil {
-		return Config{}, fmt.Errorf("invalid RCON_PORT: %w", err)
-	}
-
-	rconPassword := os.Getenv("RCON_PASSWORD")
-	if rconPassword == "" {
-		return Config{}, errors.New("RCON_PASSWORD is required")
-	}
-
-	restartCmd := os.Getenv("RCON_RESTART_COMMAND")
-	if restartCmd == "" {
-		restartCmd = "restart"
-	}
-
-	locale := os.Getenv("LOCALE")
-	if locale == "" {
-		locale = "en"
-	}
-
-	pluginsUIDStr := os.Getenv("PLUGINS_UID")
-	var pluginsUID int
-	hasPluginsUID := false
-	if pluginsUIDStr != "" {
-		uid, err := strconv.Atoi(pluginsUIDStr)
-		if err != nil {
-			return Config{}, fmt.Errorf("invalid PLUGINS_UID: %w", err)
-		}
-		pluginsUID = uid
-		hasPluginsUID = true
-	}
-
-	return Config{
-		RepoURL:       repoURL,
-		RepoBranch:    repoBranch,
-		RepoPath:      repoPath,
-		DataDir:       dataDir,
-		HTTPAddr:      ":" + port,
-		RconHost:      rconHost,
-		RconPort:      rconPort,
-		RconPassword:  rconPassword,
-		RestartCmd:    restartCmd,
-		CountdownWait: 50 * time.Second,
-		PluginsUID:    pluginsUID,
-		HasPluginsUID: hasPluginsUID,
-		Locale:        locale,
-	}, nil
+	return cfg, nil
 }

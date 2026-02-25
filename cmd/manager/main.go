@@ -2,10 +2,10 @@ package main
 
 import (
 	"log"
-	"net/http"
-
 	"mcmanager/internal/config"
-	"mcmanager/internal/manager"
+	"mcmanager/internal/http/manager"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -16,15 +16,16 @@ func main() {
 
 	mgr := manager.New(cfg)
 
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("ok"))
+	router := gin.New()
+	router.Use(gin.Logger(), gin.Recovery())
+
+	router.GET("/healthz", func(c *gin.Context) {
+		c.String(200, "ok")
 	})
+	router.POST("/update", mgr.UpdateHandler)
 
-	http.HandleFunc("/update", mgr.UpdateHandler)
-
-	log.Printf("listening on %s", cfg.HTTPAddr)
-	if err := http.ListenAndServe(cfg.HTTPAddr, nil); err != nil {
+	log.Printf("listening on %s", cfg.Port)
+	if err := router.Run(":" + cfg.Port); err != nil {
 		log.Fatalf("http server failed: %v", err)
 	}
 }
