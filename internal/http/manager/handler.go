@@ -21,26 +21,26 @@ func (m *Manager) UpdateHandler(c *gin.Context) {
 
 	log.Printf("received update request from %s", c.ClientIP())
 
-	if err := m.syncRepo(); err != nil {
+	if err := m.syncRepoFn(); err != nil {
 		log.Printf("repo sync failed: %v", err)
 		c.String(500, "repo sync failed: %v", err)
 		return
 	}
 
-	if err := m.runPluginDownload(); err != nil {
+	if err := m.pluginDownloadFn(); err != nil {
 		log.Printf("plugin download failed: %v", err)
 		c.String(500, "plugin download failed: %v", err)
 		return
 	}
 
-	if err := m.syncData(); err != nil {
+	if err := m.dataSyncFn(); err != nil {
 		log.Printf("data sync failed: %v", err)
 		c.String(500, "data sync failed: %v", err)
 		return
 	}
 
 	go func() {
-		if err := m.restartWithCountdown(); err != nil {
+		if err := m.restartFn(); err != nil {
 			log.Printf("restart failed: %v", err)
 		}
 	}()
