@@ -1,5 +1,7 @@
 # Minecraft Plugins Manager
 
+[![Go Tests](https://github.com/pxc1984/mcmanager/actions/workflows/tests.yml/badge.svg)](https://github.com/pxc1984/mcmanager/actions/workflows/tests.yml)
+
 Small HTTP service that watches a plugins repo and updates your Minecraft server data directory. On each webhook hit it pulls the repo, copies configured directories into the server data dir, then triggers an RCON restart countdown (60s notice, 10→1 second countdown, then restart).
 
 ## Requirements
