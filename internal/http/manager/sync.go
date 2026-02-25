@@ -3,46 +3,84 @@ package manager
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 func (m *Manager) syncData() error {
-	pluginsSrc := filepath.Join(m.Cfg.RepoPath, "plugins")
-	worldsSrc := filepath.Join(m.Cfg.RepoPath, "bedwars_worlds")
+	includes := parseDirList(m.Cfg.CopyDirs)
+	excludes := map[string]struct{}{}
+	for _, name := range parseDirList(m.Cfg.SkipDirs) {
+		excludes[name] = struct{}{}
+	}
 
-	pluginsDst := filepath.Join(m.Cfg.DataDir, "plugins")
-	worldsDst := filepath.Join(m.Cfg.DataDir, "bedwars_worlds")
-
-	for _, path := range []string{pluginsSrc, worldsSrc} {
-		if _, err := os.Stat(path); err != nil {
-			return fmt.Errorf("expected directory missing: %s: %w", path, err)
+	var dirs []string
+	for _, name := range includes {
+		if _, skip := excludes[name]; skip {
+			continue
 		}
+		dirs = append(dirs, name)
+	}
+	if len(dirs) == 0 {
+		return fmt.Errorf("no directories to copy after applying SKIP_DIRS")
+	}
+
+	var existing []string
+	for _, name := range dirs {
+		path := filepath.Join(m.Cfg.RepoPath, name)
+		if _, err := os.Stat(path); err != nil {
+			log.Printf("warning: expected directory missing: %s: %v", path, err)
+			continue
+		}
+		existing = append(existing, name)
+	}
+	if len(existing) == 0 {
+		return fmt.Errorf("no configured directories found in repo")
 	}
 
 	if err := os.MkdirAll(m.Cfg.DataDir, 0o755); err != nil {
 		return fmt.Errorf("ensure data dir: %w", err)
 	}
 
-	if err := copyDir(pluginsSrc, pluginsDst); err != nil {
-		return fmt.Errorf("copy plugins: %w", err)
-	}
-
-	if err := copyDir(worldsSrc, worldsDst); err != nil {
-		return fmt.Errorf("copy bedwars worlds: %w", err)
+	var copied []string
+	for _, name := range existing {
+		src := filepath.Join(m.Cfg.RepoPath, name)
+		dst := filepath.Join(m.Cfg.DataDir, name)
+		if err := copyDir(src, dst); err != nil {
+			return fmt.Errorf("copy %s: %w", name, err)
+		}
+		copied = append(copied, dst)
 	}
 
 	if m.Cfg.PluginsUID != 0 && runtime.GOOS == "linux" {
-		if err := chownRecursive(pluginsDst, m.Cfg.PluginsUID); err != nil {
-			return fmt.Errorf("chown plugins: %w", err)
-		}
-		if err := chownRecursive(worldsDst, m.Cfg.PluginsUID); err != nil {
-			return fmt.Errorf("chown worlds: %w", err)
+		for _, dst := range copied {
+			if err := chownRecursive(dst, m.Cfg.PluginsUID); err != nil {
+				return fmt.Errorf("chown %s: %w", dst, err)
+			}
 		}
 	}
 
 	return nil
+}
+
+func parseDirList(raw string) []string {
+	var out []string
+	seen := map[string]struct{}{}
+	for _, part := range strings.Split(raw, ",") {
+		name := strings.TrimSpace(part)
+		if name == "" || name == "." {
+			continue
+		}
+		if _, exists := seen[name]; exists {
+			continue
+		}
+		seen[name] = struct{}{}
+		out = append(out, name)
+	}
+	return out
 }
 
 func copyDir(src, dst string) error {

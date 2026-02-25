@@ -1,6 +1,6 @@
 # Minecraft Plugins Manager
 
-Small HTTP service that watches a plugins repo and updates your Minecraft server data directory. On each webhook hit it pulls the repo, copies `plugins/` and `bedwars_worlds/` into the server data dir, then triggers an RCON restart countdown (60s notice, 10→1 second countdown, then restart).
+Small HTTP service that watches a plugins repo and updates your Minecraft server data directory. On each webhook hit it pulls the repo, copies configured directories into the server data dir, then triggers an RCON restart countdown (60s notice, 10→1 second countdown, then restart).
 
 ## Requirements
 
@@ -19,9 +19,11 @@ Create a `.env` file (see `.env.example`) with:
 - `PORT` (default `8080`): HTTP listen port.
 - `RCON_HOST`, `RCON_PORT`, `RCON_PASSWORD` (all required): RCON connection to the running server.
 - `RCON_RESTART_COMMAND` (default `restart`): Command sent after countdown.
-- `PLUGINS_UID` (optional): Numeric user/group ID to apply (recursive chown) to synced `plugins/` and `bedwars_worlds/` on Linux.
+- `PLUGINS_UID` (optional): Numeric user/group ID to apply (recursive chown) to synced directories on Linux.
 - `PLUGINS_DOWNLOAD` (default `true`): Run `plugins/download.sh` before syncing (set `false` to skip).
 - `SECRET_TOKEN` (optional): If set, requests must include matching `X-Secret-Token` header.
+- `COPY_DIRS` (default `plugins,bedwars_worlds,configs,worlds`): Comma-separated repo directories to copy into `DATA_DIR`.
+- `SKIP_DIRS` (optional): Comma-separated list to exclude from `COPY_DIRS`.
 - `LOCALE` (optional, default `en`): Announcement language (`en`, `ru` supported).
 
 ## Running with docker-compose
@@ -43,7 +45,7 @@ Create a `.env` file (see `.env.example`) with:
 - Expected body: none (the manager just pulls the configured repo).
 - On `/update`, the service:
   1. Pulls the repo/branch (clones if missing).
-  2. Copies `plugins/` → `${DATA_DIR}/plugins` and `bedwars_worlds/` → `${DATA_DIR}/bedwars_worlds` (destinations are fully replaced).
+  2. Copies each directory from `COPY_DIRS` (minus `SKIP_DIRS`) into `${DATA_DIR}` (destinations are fully replaced).
   3. Announces `Restarting in 60 seconds` via RCON, waits ~50s, counts down 10…1, then sends `RCON_RESTART_COMMAND`.
 
 ## Directory layout in the repo
@@ -51,9 +53,11 @@ Create a `.env` file (see `.env.example`) with:
 ```
 plugins/
 bedwars_worlds/
+configs/
+worlds/
 ```
 
-Anything else is ignored by the sync logic.
+Anything else is ignored by the sync logic unless added via `COPY_DIRS`.
 
 ## Local development (optional)
 

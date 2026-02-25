@@ -18,6 +18,8 @@ type Config struct {
 	PluginsUID      int    `env:"PLUGINS_UID" envDefault:"0"`
 	PluginsDownload bool   `env:"PLUGINS_DOWNLOAD" envDefault:"true"`
 	SecretToken     string `env:"SECRET_TOKEN" envDefault:""`
+	CopyDirs        string `env:"COPY_DIRS" envDefault:"plugins,bedwars_worlds,configs,worlds"`
+	SkipDirs        string `env:"SKIP_DIRS" envDefault:""`
 	Locale          string `env:"LOCALE" envDefault:"en"`
 }
 
