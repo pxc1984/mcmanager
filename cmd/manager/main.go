@@ -4,11 +4,13 @@ import (
 	"log"
 	"mcmanager/internal/config"
 	"mcmanager/internal/http/manager"
+	"mcmanager/internal/logging"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	logging.Init()
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("config error: %v", err)
