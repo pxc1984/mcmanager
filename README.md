@@ -20,6 +20,8 @@ Create a `.env` file (see `.env.example`) with:
 - `RCON_HOST`, `RCON_PORT`, `RCON_PASSWORD` (all required): RCON connection to the running server.
 - `RCON_RESTART_COMMAND` (default `restart`): Command sent after countdown.
 - `PLUGINS_UID` (optional): Numeric user/group ID to apply (recursive chown) to synced `plugins/` and `bedwars_worlds/` on Linux.
+- `PLUGINS_DOWNLOAD` (default `true`): Run `plugins/download.sh` before syncing (set `false` to skip).
+- `SECRET_TOKEN` (optional): If set, requests must include matching `X-Secret-Token` header.
 - `LOCALE` (optional, default `en`): Announcement language (`en`, `ru` supported).
 
 ## Running with docker-compose

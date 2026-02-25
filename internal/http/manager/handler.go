@@ -7,6 +7,15 @@ import (
 )
 
 func (m *Manager) UpdateHandler(c *gin.Context) {
+	if m.Cfg.SecretToken != "" {
+		token := c.GetHeader("X-Secret-Token")
+		if token == "" || token != m.Cfg.SecretToken {
+			log.Printf("unauthorized update request from %s", c.ClientIP())
+			c.String(401, "unauthorized")
+			return
+		}
+	}
+
 	m.Mu.Lock()
 	defer m.Mu.Unlock()
 

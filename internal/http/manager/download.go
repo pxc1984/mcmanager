@@ -9,6 +9,11 @@ import (
 )
 
 func (m *Manager) runPluginDownload() error {
+	if !m.Cfg.PluginsDownload {
+		log.Printf("plugin download disabled; skipping plugins/download.sh")
+		return nil
+	}
+
 	scriptPath := filepath.Join(m.Cfg.RepoPath, "plugins", "download.sh")
 	if _, err := os.Stat(scriptPath); err != nil {
 		return fmt.Errorf("plugins/download.sh missing: %w", err)
