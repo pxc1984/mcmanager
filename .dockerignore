@@ -1,0 +1,5 @@
+docs/
+.idea/
+.github/
+*.yml
+*.md
